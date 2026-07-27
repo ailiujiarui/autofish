@@ -25,7 +25,7 @@ The settings screen includes multiplayer sound/motion detection, multi-rod switc
 .\gradlew.bat build
 ```
 
-The release JAR is written to `build/libs/autofish-1.2.0.jar`.
+The release JAR is written to `build/libs/autofish-neoforge-1.2.0.jar`.
 
 ## License and attribution
 

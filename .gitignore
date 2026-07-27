@@ -1,6 +1,7 @@
 .gradle/
 build/
 run/
+run-fabric/
 logs/
 out/
 *.iml
