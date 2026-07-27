@@ -212,7 +212,7 @@ Aquaculture 的 `AquaFishingHookEntity` 继承原版 `FishingHook` 并写入 `pl
 
 ### Fabric 适配边界
 
-1. 使用 Fabric Loom、Fabric Loader 与适配 Minecraft 26.1.2 的 Fabric API，继续采用 Mojang 官方映射和 Java 25。
+1. 使用 Fabric Loom、Fabric Loader 与适配 Minecraft 26.1.2 的 Fabric API，并使用 Java 25。Fabric 官方 26.1.2 工程不再声明 Mojang 或 Yarn mappings，直接使用该版本 Minecraft 开发 JAR 提供的名称；构建配置必须遵循这一差异。
 2. NeoForge `@Mod` 入口改为 Fabric `ClientModInitializer`；客户端 tick、HUD、按键和断线清理由 Fabric API 对应事件注册。
 3. NeoForge 服务端实体 tick 后事件不可直接复用。Fabric 单人检测改为向 `FishingHook.tick()` 尾部注入客户端环境 Mixin，读取服务端实例的 `nibble` 后复用现有控制器入口。该 Mixin 必须覆盖 `FishingHook` 子类实例，且继续使用重复收竿保护。
 4. 配置目录由 NeoForge `FMLPaths.CONFIGDIR` 改为 Fabric Loader 的配置目录；JSON 格式和版本 3 迁移规则保持一致。
