@@ -2,7 +2,7 @@
 
 ## 目标
 
-制作一个面向 Minecraft 26.1.2 的 NeoForge 客户端 Mod，提供自动钓鱼功能和游戏内配置界面，并原生兼容 Aquaculture 2（水产 2）。功能只调用客户端正常的鱼竿使用动作，不修改服务端逻辑、不伪造数据包、不绕过反作弊。
+制作面向 Minecraft 26.1.2 的自动钓鱼客户端 Mod，以 `neoforge-26.1.2` 和 `fabric-26.1.2` 两个长期分支分别发布。两个分支提供相同的自动钓鱼、游戏内配置和 ESC 菜单继续运行能力；Aquaculture 2（水产 2）完整兼容仅属于 NeoForge 分支。功能只调用客户端正常的鱼竿使用动作，不修改服务端逻辑、不伪造数据包、不绕过反作弊。
 
 ## 参考范围
 
@@ -34,7 +34,7 @@
 | 仅在潜行时运行 | 关闭 | 便于和其他场景共存 |
 | ESC 菜单继续钓鱼 | 开启 | 自动钓鱼流程活跃时，打开暂停菜单仍继续世界 tick、收竿与重抛 |
 
-配置界面使用 NeoForge 客户端事件注册，并采用 26.1.2 原生 `Screen` 实现，因此不依赖 YACL。配置文件使用 JSON，版本字段用于后续迁移。
+配置界面采用 26.1.2 原生 `Screen` 实现，因此不依赖 YACL；入口分别通过 NeoForge 扩展点和 Fabric 的 `F9` 按键提供。配置文件使用 JSON，版本字段用于后续迁移。
 
 ## 状态机
 
@@ -59,7 +59,7 @@ PAUSED
 
 ## 兼容与安全边界
 
-- 目标平台：Minecraft 26.1.2、NeoForge 26.1.x，客户端 Mod，Java 25。
+- 目标平台：Minecraft 26.1.2、NeoForge 26.1.x 或 Fabric Loader 0.19.3，客户端 Mod，Java 25；每个 JAR 只对应一个加载器。
 - 默认不在服务器连接期间强制运行；用户可手动关闭。
 - 不提供自动整理背包、自动售卖、穿透检测或任何服务端自动化功能。
 - 失去焦点、死亡、维度切换和网络断开时立即停止动作；暂停菜单仅在 `runWhilePaused` 开启且钓鱼流程活跃时放行。
@@ -74,7 +74,7 @@ PAUSED
 - `client/mixin`：单人鱼漂逻辑与多人客户端包回调。
 - `client/AutoFishConfig`：配置模型、JSON 读写和默认值。
 - `client/AutoFishConfigScreen`：配置界面。
-- HUD 通过 NeoForge 客户端 GUI Overlay 事件注册。
+- HUD 通过各加载器的客户端 HUD 注册接口接入。
 
 ## 验证计划
 
@@ -134,7 +134,7 @@ PAUSED
 
 ## 已确认事项
 
-- NeoForge 是唯一目标加载器；原 Fabric 发布目标由本节之后的 1.2 设计取代。
+- 本节记录的是 1.1 阶段决策；加载器目标现已由 1.4 的 NeoForge/Fabric 双分支方案取代。
 - 配置界面使用内置原生界面，不引入 YACL。
 - HUD 默认显示在左上角；第一版暂不提供位置自定义。
 
@@ -155,7 +155,7 @@ Aquaculture 的 `AquaFishingHookEntity` 继承原版 `FishingHook` 并写入 `pl
 3. 在 NeoForge 服务端实体 tick 后事件中统一处理所有 `FishingHook` 实例，并通过原版 `FishingHook` Accessor Mixin 读取 `nibble`。事件发生在具体实体自身 tick 完成后，因此既覆盖原版 `catchingFish`，也覆盖 Aquaculture 浮漂覆写的 `catchingFish`（包括熔岩钓鱼），无需引用 Aquaculture 类或增加可选类 Mixin。
 4. Aquaculture 水中与熔岩咬钩均走上述覆写方法，因此共用同一检测入口；收竿与重抛仍使用正常的客户端物品交互，不调用 Aquaculture 私有 API。
 5. 多人环境继续默认使用速度包或溅水声音检测，不依赖服务端安装 Auto Fish。Aquaculture 的非原版熔岩声音不能作为唯一检测源，速度包和单人服务端回调作为主要路径。
-6. 发布物为原生 NeoForge JAR，可与同版本 Aquaculture 2 直接同装；不再发布 Fabric JAR，避免两个加载器产物混淆。
+6. NeoForge 发布物可与同版本 Aquaculture 2 直接同装。本条中的“不发布 Fabric JAR”旧决策已被 1.4 取代；两个加载器现在使用带明确后缀的独立产物避免混淆。
 
 ### 验证计划
 
@@ -169,7 +169,7 @@ Aquaculture 的 `AquaFishingHookEntity` 继承原版 `FishingHook` 并写入 `pl
 ### 已确认决策
 
 - 目标组合为 Minecraft 26.1.2、NeoForge 26.1.x 和 Aquaculture 2 26.1.x。
-- Auto Fish 改为原生 NeoForge 客户端 Mod，不依赖 Fabric 兼容层，也不继续维护 Fabric 构建。
+- NeoForge 分支保持原生 NeoForge 实现且不依赖 Fabric 兼容层；“不维护 Fabric 构建”的旧决策已被 1.4 的独立 Fabric 分支取代。
 
 ## 1.3 ESC 暂停菜单继续钓鱼设计
 
