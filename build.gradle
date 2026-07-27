@@ -1,0 +1,95 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'net.neoforged.moddev' version '2.0.142'
+    id 'idea'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+
+sourceSets {
+    main {
+        java.srcDir 'src/client/java'
+        resources.srcDir 'src/client/resources'
+    }
+}
+
+neoForge {
+    version = project.neo_version
+
+    runs {
+        client {
+            client()
+            if (project.hasProperty('quickPlayWorld')) {
+                programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
+            }
+        }
+
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.INFO
+        }
+    }
+
+    mods {
+        autofish {
+            sourceSet(sourceSets.main)
+        }
+    }
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+processResources {
+    def properties = [
+            mod_version            : project.mod_version,
+            minecraft_version_range: project.minecraft_version_range,
+            neo_version_range      : project.neo_version_range
+    ]
+    inputs.properties(properties)
+    filesMatching('META-INF/neoforge.mods.toml') {
+        expand(properties)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release = 25
+    options.encoding = 'UTF-8'
+    options.compilerArgs.add('-Xlint:deprecation')
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+java {
+    withSourcesJar()
+}
+
+jar {
+    from('LICENSE') {
+        rename { "${it}_${project.name}" }
+    }
+    from('NOTICE') {
+        rename { "${it}_${project.name}" }
+    }
+}
+
+publishing {
+    publications {
+        create('mavenJava', MavenPublication) {
+            from components.java
+        }
+    }
+}

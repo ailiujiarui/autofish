@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "io.github.ximu.autofish.client.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "ClientPacketListenerMixin",
+    "FishingHookMixin",
+    "PauseScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
