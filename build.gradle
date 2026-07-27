@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'maven-publish'
-    id 'net.neoforged.moddev' version '2.0.142'
+    id 'net.fabricmc.fabric-loom' version '1.17.17'
     id 'idea'
 }
 
@@ -14,38 +14,28 @@ base {
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
-sourceSets {
-    main {
-        java.srcDir 'src/client/java'
-        resources.srcDir 'src/client/resources'
-    }
+sourceSets.main {
+    java.srcDir 'src/client/java'
+    resources.srcDir 'src/client/resources'
 }
 
-neoForge {
-    version = project.neo_version
-
+loom {
     runs {
         client {
             client()
+            runDir 'run-fabric'
             if (project.hasProperty('quickPlayWorld')) {
-                programArguments.addAll '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
+                programArgs '--quickPlaySingleplayer', project.property('quickPlayWorld').toString()
             }
-        }
-
-        configureEach {
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
-            logLevel = org.slf4j.event.Level.INFO
-        }
-    }
-
-    mods {
-        autofish {
-            sourceSet(sourceSets.main)
         }
     }
 }
 
 dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    implementation "net.fabricmc:fabric-loader:${project.fabric_loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+
     testImplementation platform('org.junit:junit-bom:5.12.2')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -53,12 +43,12 @@ dependencies {
 
 processResources {
     def properties = [
-            mod_version            : project.mod_version,
-            minecraft_version_range: project.minecraft_version_range,
-            neo_version_range      : project.neo_version_range
+            mod_version          : project.mod_version,
+            minecraft_version    : project.minecraft_version,
+            fabric_loader_version: project.fabric_loader_version
     ]
     inputs.properties(properties)
-    filesMatching('META-INF/neoforge.mods.toml') {
+    filesMatching('fabric.mod.json') {
         expand(properties)
     }
 }

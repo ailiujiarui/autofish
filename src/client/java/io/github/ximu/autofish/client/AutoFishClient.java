@@ -2,58 +2,49 @@ package io.github.ximu.autofish.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import io.github.ximu.autofish.client.config.ConfigManager;
-import io.github.ximu.autofish.client.access.FishingHookAccess;
 import io.github.ximu.autofish.client.screen.AutoFishConfigScreen;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientboundSystemChatPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.CommonColors;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.projectile.FishingHook;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.client.event.RenderGuiEvent;
-import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
 import org.lwjgl.glfw.GLFW;
 
-@Mod(value = AutoFishClient.MOD_ID, dist = Dist.CLIENT)
-public final class AutoFishClient {
+public final class AutoFishClient implements ClientModInitializer {
     public static final String MOD_ID = "autofish";
     private static AutoFishClient instance;
 
     private final ConfigManager configManager = new ConfigManager();
     private final FishingController controller = new FishingController(configManager);
-    private final KeyMapping.Category keyCategory;
-    private final KeyMapping toggleKey;
-    private final KeyMapping configKey;
+    private KeyMapping toggleKey;
+    private KeyMapping configKey;
 
-    public AutoFishClient(IEventBus modBus, ModContainer container) {
+    @Override
+    public void onInitializeClient() {
         instance = this;
         configManager.load();
         controller.updateDetection();
 
-        keyCategory = new KeyMapping.Category(id("controls"));
-        toggleKey = new KeyMapping("key.autofish.toggle", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F8, keyCategory);
-        configKey = new KeyMapping("key.autofish.config", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F9, keyCategory);
+        KeyMapping.Category keyCategory = KeyMapping.Category.register(id("controls"));
+        toggleKey = KeyMappingHelper.registerKeyMapping(
+                new KeyMapping("key.autofish.toggle", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F8, keyCategory));
+        configKey = KeyMappingHelper.registerKeyMapping(
+                new KeyMapping("key.autofish.config", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F9, keyCategory));
 
-        modBus.addListener(this::registerKeys);
-        container.registerExtensionPoint(IConfigScreenFactory.class,
-                (ignored, parent) -> new AutoFishConfigScreen(parent, configManager));
-
-        NeoForge.EVENT_BUS.addListener(this::onClientTick);
-        NeoForge.EVENT_BUS.addListener(this::onRenderGui);
-        NeoForge.EVENT_BUS.addListener(this::onEntityTick);
-        NeoForge.EVENT_BUS.addListener(this::onLogout);
+        ClientTickEvents.END_CLIENT_TICK.register(this::onClientTick);
+        HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, id("status"),
+                (graphics, tickCounter) -> onRenderGui(graphics));
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> onLogout());
     }
 
     public static AutoFishClient instance() {
@@ -76,14 +67,7 @@ public final class AutoFishClient {
         return controller.shouldKeepWorldRunning();
     }
 
-    private void registerKeys(RegisterKeyMappingsEvent event) {
-        event.registerCategory(keyCategory);
-        event.register(toggleKey);
-        event.register(configKey);
-    }
-
-    private void onClientTick(ClientTickEvent.Post event) {
-        Minecraft client = Minecraft.getInstance();
+    private void onClientTick(Minecraft client) {
         while (toggleKey.consumeClick()) {
             toggle(client);
         }
@@ -95,21 +79,15 @@ public final class AutoFishClient {
         controller.tick(client);
     }
 
-    private void onRenderGui(RenderGuiEvent.Post event) {
+    private void onRenderGui(GuiGraphicsExtractor graphics) {
         if (!configManager.get().showHud || !configManager.get().enabled) {
             return;
         }
         Component text = Component.literal("Auto Fish: ").append(controller.statusText());
-        event.getGuiGraphics().text(Minecraft.getInstance().font, text, 8, 8, CommonColors.WHITE);
+        graphics.text(Minecraft.getInstance().font, text, 8, 8, CommonColors.WHITE);
     }
 
-    private void onEntityTick(EntityTickEvent.Post event) {
-        if (event.getEntity() instanceof FishingHook hook && !hook.level().isClientSide()) {
-            onFishingLogic(hook.getOwner(), ((FishingHookAccess) hook).autofish$getNibble());
-        }
-    }
-
-    private void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+    private void onLogout() {
         controller.reset();
         configManager.save();
     }

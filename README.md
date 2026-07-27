@@ -1,14 +1,15 @@
 # Auto Fish
 
-A configurable client-side automatic fishing mod for Minecraft 26.1.2 and NeoForge. This project ports [troyhayes/autofish](https://github.com/troyhayes/autofish) from Minecraft 1.19.3, retains its singleplayer and multiplayer bite-detection strategies, and supports Aquaculture 2 fishing rods and hooks.
+A configurable client-side automatic fishing mod for Minecraft 26.1.2 and Fabric. This branch ports [troyhayes/autofish](https://github.com/troyhayes/autofish) from Minecraft 1.19.3 and retains its singleplayer and multiplayer bite-detection strategies.
 
 ## Requirements
 
 - Minecraft 26.1.2
-- NeoForge 26.1.2.71 or newer compatible 26.1.2 release
+- Fabric Loader 0.19.3 or newer
+- Fabric API 0.155.2+26.1.2
 - Java 25
 
-Aquaculture 2 is optional. Version 2.9.2 is the tested compatibility target for Minecraft 26.1.2.
+Aquaculture 2 2.9.2 is a NeoForge mod and cannot be installed on Fabric. This branch still recognizes `FishingRodItem` subclasses and items using the common fishing-rod tag.
 
 ## Controls
 
@@ -25,7 +26,7 @@ The settings screen includes multiplayer sound/motion detection, multi-rod switc
 .\gradlew.bat build
 ```
 
-The release JAR is written to `build/libs/autofish-1.2.0.jar`.
+The release JAR is written to `build/libs/autofish-fabric-1.2.0.jar`.
 
 ## License and attribution
 

@@ -3,7 +3,7 @@ package io.github.ximu.autofish.client.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
-import net.neoforged.fml.loading.FMLPaths;
+import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ import java.nio.file.StandardCopyOption;
 public final class ConfigManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("autofish/config");
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path CONFIG_PATH = FMLPaths.CONFIGDIR.get().resolve("autofish.json");
+    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve("autofish.json");
 
     private AutoFishConfig config = new AutoFishConfig();
 
